@@ -17,15 +17,16 @@ N = 4096;
 
 
 signal1 = guitar.B.clean;
-signal2 = test.e.clean;
+signal2 = test.D.clean;
 signal3 = test40.y80;
 
-signal = signal1; % use to change between type of signals
+signal = signal2; % use to change between type of signals
 
 
 numFrames = length(signal) / N;
 frameTime = N * 1/fs;
 frame = zeros(1,N);
+graph = '';
 graph = init_plot(frame);
 [b, a] = init_DC_Filter(fs);
 
@@ -46,7 +47,7 @@ for k = 1 : numFrames
     
     
     % do algorithm on xf
-    
+    Mcleod_pitch_method
     
     
     
@@ -66,6 +67,7 @@ function graph = init_plot (frame)
     graph = plot(frame);
     axis tight
     ylim([-2048 2048])
+    grid on
 end
 
 function [b, a] = init_DC_Filter (fs)
