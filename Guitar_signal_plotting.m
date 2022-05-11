@@ -16,13 +16,11 @@ fs = guitar.fs;
 N = 4096;
 
 
-signal1 = guitar.E.clean;
-signal2 = test.E.clean;
+signal1 = guitar.B.clean;
+signal2 = test.e.clean;
 signal3 = test40.y80;
 
-signal = signal1;
-
-
+signal = signal1; % use to change between type of signals
 
 
 numFrames = length(signal) / N;
@@ -44,7 +42,10 @@ for k = 1 : numFrames
     %     V V Pitch Detection Function V V
     %-------------------------------------------------- 
   
+ 
     
+    
+    % do algorithm on xf
     
     
     
@@ -54,7 +55,7 @@ for k = 1 : numFrames
     %
     set(graph, 'yData', xf)
     drawnow
-    pause(0.25)
+    pause(0.512)
 
 end
 
@@ -64,7 +65,7 @@ function graph = init_plot (frame)
     figure(1)
     graph = plot(frame);
     axis tight
-    ylim([-2048 4096])
+    ylim([-2048 2048])
 end
 
 function [b, a] = init_DC_Filter (fs)
