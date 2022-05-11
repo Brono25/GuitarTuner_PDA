@@ -13,7 +13,7 @@ load('Sensor_Data/test_40k.mat');    % purse sin waves fs = 40kHz
 
 
 fs = guitar.fs;
-N = 4096; %frame size
+N = 4096; 
 
 
 signal1 = guitar.B.clean;
