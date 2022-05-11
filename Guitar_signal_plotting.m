@@ -2,40 +2,34 @@
 
 
 
-%
 clc
 clear all
-%load('Sensor_Data/PickupData/pickup_data.mat');
-load('Sensor_Data/guitar_data.mat');
-% load('Sensor_Data/guitar_data.mat');
-% load('Sensor_Data/test_data.mat');
-% load('Sensor_Data/test_40k.mat');
 format long g
+
+
+load('Sensor_Data/guitar_data.mat'); % guitar signals  fs = 8kHz
+load('Sensor_Data/test_data.mat');   % pure sin waves  fs = 8kHz
+load('Sensor_Data/test_40k.mat');    % purse sin waves fs = 40kHz
+
 
 fs = guitar.fs;
 N = 4096;
 
-%signal = test.E.fast;
-signal = guitar.e.clean;
+
+signal1 = guitar.E.clean;
+signal2 = test.E.clean;
+signal3 = test40.y80;
+
+signal = signal1;
+
 
 
 
 numFrames = length(signal) / N;
 frameTime = N * 1/fs;
 frame = zeros(1,N);
-
-%plotting
-figure(1)
-graph = plot(frame);
-axis tight
-ylim([-2048 4096])
-
-%DC filter
-fc = 55;
-fn = fc / (fs/2);
-order = 1;
-[b, a] = butter(order, fn, 'high');
-
+graph = init_plot(frame);
+[b, a] = init_DC_Filter(fs);
 
 for k = 1 : numFrames 
     
@@ -47,9 +41,13 @@ for k = 1 : numFrames
     xf = filtfilt(b,a,frame);
     
     %
-    %      PDA Functions
+    %     V V Pitch Detection Function V V
     %-------------------------------------------------- 
   
+    
+    
+    
+    
     
     %-------------------------------------------------- 
     %
@@ -60,12 +58,25 @@ for k = 1 : numFrames
 
 end
 
-function init_plot 
+function graph = init_plot (frame)
 
+    %plotting
+    figure(1)
+    graph = plot(frame);
+    axis tight
+    ylim([-2048 4096])
+end
 
+function [b, a] = init_DC_Filter (fs)
 
+    %DC filter
+    fc = 55;
+    fn = fc / (fs/2);
+    order = 1;
+    [b, a] = butter(order, fn, 'high');
 
 end
+
 
 
 
