@@ -11,7 +11,7 @@ load('Sensor_Data/guitar_data.mat'); % guitar signals  fs = 8kHz
 load('Sensor_Data/test_data.mat');   % pure sin waves  fs = 8kHz
 load('Sensor_Data/test_40k.mat');    % purse sin waves fs = 40kHz
 
-%CHANGE
+
 fs = guitar.fs;
 N = 4096; 
 
