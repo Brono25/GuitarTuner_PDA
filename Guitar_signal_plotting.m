@@ -47,14 +47,15 @@ for k = 1 : numFrames
     
     
     % do algorithm on xf
-    Mcleod_pitch_method
+    pitch = Mcleod_pitch_method(xf);
+    
     
     
     
     %-------------------------------------------------- 
     %
     %
-    set(graph, 'yData', xf)
+    set(graph, 'yData', pitch)
     drawnow
     pause(0.512)
 
