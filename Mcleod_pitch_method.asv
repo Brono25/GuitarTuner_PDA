@@ -1,9 +1,0 @@
-
-
-
-function pitch = Mcleod_pitch_method(signal)
-
-    resample
-    disp('buffer processed')
-
-end
