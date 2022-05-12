@@ -13,14 +13,14 @@ load('Sensor_Data/test_40k.mat');    % purse sin waves fs = 40kHz
 
 
 fs = guitar.fs;
-N = 4096; 
+N = 1024; 
 
 
-signal1 = guitar.B.clean;
-signal2 = test.D.clean;
+signal1 = guitar.E.clean;
+signal2 = test.E.clean;
 signal3 = test40.y80;
 
-signal = signal2; % use to change between type of signals
+signal = signal1; % use to change between type of signals
 
 
 numFrames = length(signal) / N;
@@ -55,9 +55,9 @@ for k = 1 : numFrames
     %-------------------------------------------------- 
     %
     %
-    set(graph, 'yData', pitch)
+    set(graph, 'yData', xf)
     drawnow
-    pause(0.512)
+    pause(0.128)
 
 end
 
