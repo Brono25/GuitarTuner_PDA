@@ -16,8 +16,8 @@ fs = guitar.fs;
 N = 1024; 
 
 
-signal1 = guitar.E.clean;
-signal2 = test.E.clean;
+signal1 = guitar.e.clean;
+signal2 = test.A.clean;
 signal3 = test40.y80;
 
 signal = signal1; % use to change between type of signals
@@ -37,7 +37,8 @@ for k = 1 : numFrames
     %subtract the DC bias of the MCU ADC
     frame = double(frame) - 2212;
     % further DC filtering
-    xf = filtfilt(b,a,frame);
+    xf = frame;
+   % xf = filtfilt(b,a,frame);
     
     %
     %     V V Pitch Detection Function V V
@@ -74,9 +75,9 @@ end
 function [b, a] = init_DC_Filter (fs)
 
     %DC filter
-    fc = 55;
+    fc = 20;
     fn = fc / (fs/2);
-    order = 1;
+    order = 2;
     [b, a] = butter(order, fn, 'high');
 
 end
