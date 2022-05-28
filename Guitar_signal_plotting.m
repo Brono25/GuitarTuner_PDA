@@ -1,11 +1,6 @@
 
 
-
-
 clc
-clear all
-format long g
-
 
 load('Sensor_Data/guitar_data.mat'); % guitar signals  fs = 8kHz
 load('Sensor_Data/test_data.mat');   % pure sin waves  fs = 8kHz
@@ -13,58 +8,65 @@ load('Sensor_Data/test_40k.mat');    % purse sin waves fs = 40kHz
 
 
 fs = guitar.fs;
-N = 2048; 
-max_value = 4096/2; %peak value of adc signal after dc removed
 
-signal1 = guitar.A.clean;
-signal2 = test.A.clean;
+max_value = 4096/2; %peak value of adc signal after dc removed.
+DC_bias = 2212; %adc values are from [0 4096]. Adjust to [-2048 2048]
+
+signal1 = guitar.B.clean;   %guitar test signals
+signal2 = test.B.clean;     %pure tone test signals
 signal3 = test40.y80;
 
 signal = signal2; % use to change between type of signals
 
 
+
+% Test signals are broken into frames of size N and processed. This is to
+% emulate a real time ADC buffer.
+N = 2048 * 2; 
 numFrames = length(signal) / N;
 frameTime = N * 1/fs;
-frame = zeros(1,N);
+ADC_buffer_frame = zeros(1, N);
 
-graph_signal = ''; 
-graph_nsdf = '';
-[graph_signal , graph_nsdf] = init_plot(frame, fs);
+[graph_signal , graph_nsdf] = init_plot(ADC_buffer_frame, fs);
 [b, a] = init_DC_Filter(fs);
+
 
 for k = 1 : numFrames 
     
     frameCounter = (k - 1) * N + 1 : N * k;
-    frame = [signal(frameCounter)];
-    %subtract the DC bias of the MCU ADC
-    frame = double(frame) - 2212;
-    % further DC filtering
-    xf = frame;
-    %xf = filtfilt(b,a,frame);
-    
+    ADC_buffer_frame = signal(frameCounter);
+    ADC_buffer_frame = double(ADC_buffer_frame) - DC_bias;
     %
-    %      Process Signal xf
+    %              Process Frame
     %-------------------------------------------------- 
   
- 
+
+     frame_thrsh = thresholding(ADC_buffer_frame, 0.05 * max_value);
+     [n, tau, xy] = Mcleod_pitch_method(frame_thrsh);
     
-   
-     xf = thresholding(xf, 0.1 * max_value);
-     n = Mcleod_pitch_method(xf);
-    
-    
+     pitch = round(fs / tau, 2);
+     
  
     
     %-------------------------------------------------- 
     %
     %
-    set(graph_signal, 'yData', xf)
-    set(graph_nsdf, 'yData', n)
-    
+   
+    set(graph_signal, 'yData', ADC_buffer_frame);
+    set(graph_nsdf, 'yData', n);
     drawnow
-    pause(0.256 * 1)
-
+    
+    
+    leg_str = sprintf('Pitch Estimate: %.2f Hz\n',pitch);
+    legend(leg_str, 'fontsize', 20);
+	fprintf('        %.2f Hz\n',pitch);
+    
+    
+    
+    
+    pause(0.256 * 40)
 end
+
 
 function [graph_signal , graph_nsdf] = init_plot (frame, fs)
     
@@ -105,14 +107,14 @@ function [graph_signal , graph_nsdf] = init_plot (frame, fs)
     G3 = 41;
     B3 = 32;
     E4 = 24;
-    
+    light_red = [1 0.5 0.5];
     yl = get(gca, 'YLim');
-    line( [E2 E2],  yl, 'Color',[1 0.5 0.5],'LineStyle','--');
-    line( [A2 A2],  yl, 'Color',[1 0.5 0.5],'LineStyle','--');
-    line( [D3 D3],  yl, 'Color',[1 0.5 0.5],'LineStyle','--');
-    line( [G3 G3],  yl, 'Color',[1 0.5 0.5],'LineStyle','--');
-    line( [B3 B3],  yl, 'Color',[1 0.5 0.5],'LineStyle','--');
-    line( [E4 E4],  yl, 'Color',[1 0.5 0.5],'LineStyle','--');
+    line( [E2 E2],  yl, 'Color',light_red,'LineStyle','--');
+    line( [A2 A2],  yl, 'Color',light_red,'LineStyle','--');
+    line( [D3 D3],  yl, 'Color',light_red,'LineStyle','--');
+    line( [G3 G3],  yl, 'Color',light_red,'LineStyle','--');
+    line( [B3 B3],  yl, 'Color',light_red,'LineStyle','--');
+    line( [E4 E4],  yl, 'Color',light_red,'LineStyle','--');
     
     text(98, -0.9, 'E_2','FontSize',15);
     text(74, -0.9, 'A_3','FontSize',15);
@@ -120,6 +122,8 @@ function [graph_signal , graph_nsdf] = init_plot (frame, fs)
     text(42, -0.9, 'G_3','FontSize',15);
     text(33, -0.9, 'B_3','FontSize',15);
     text(25, -0.9, 'E_4','FontSize',15);
+    
+   
 end
 
 function [b, a] = init_DC_Filter (fs)
