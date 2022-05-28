@@ -1,9 +1,33 @@
 
 
 %do method
-function pitch = Mcleod_pitch_method(signal)
+function n = Mcleod_pitch_method(signal)
 
-    x = resample(signal, 5, 1);
+    %x = resample(signal, 5, 1);
+    n = NSDF(signal);
+   
+end
+
+
+function n = NSDF(signal)
+
+    W = length(signal)
+    n = zeros(1 , W/4);
+    m = zeros(1 , W);
     
-    pitch = x;
+    [sigx, ~] = xcorr(signal, signal);
+
+    r = sigx(W  : end); %ignore negative lag half, start from tau = 0.
+
+    for tau = 0 : W - 1
+        sum = 0;
+        for j = 1 : W - tau
+            sum = sum + signal(j)^2 + signal(j + tau)^2;
+        end
+        m(tau + 1) = sum;
+    end
+    
+    n = 2 * r ./ m;
+    n = n(1 : W / 4);
+
 end
