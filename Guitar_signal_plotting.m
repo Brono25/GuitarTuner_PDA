@@ -13,14 +13,14 @@ load('Sensor_Data/test_40k.mat');    % purse sin waves fs = 40kHz
 
 
 fs = guitar.fs;
-N = 1024 * 2; 
+N = 2048; 
 max_value = 4096/2; %peak value of adc signal after dc removed
 
 signal1 = guitar.A.clean;
 signal2 = test.A.clean;
 signal3 = test40.y80;
 
-signal = signal1; % use to change between type of signals
+signal = signal2; % use to change between type of signals
 
 
 numFrames = length(signal) / N;
@@ -60,8 +60,9 @@ for k = 1 : numFrames
     %
     set(graph_signal, 'yData', xf)
     set(graph_nsdf, 'yData', n)
+    
     drawnow
-    pause(0.128 * 3)
+    pause(0.256 * 1)
 
 end
 
@@ -87,14 +88,38 @@ function [graph_signal , graph_nsdf] = init_plot (frame, fs)
     
     %plotting NSDF
     nexttile
+    
     graph_nsdf = plot(lags, zeros(1, W/4));
+    
     title('NSDF Correlation', 'fontsize', 25);
     xlabel('Lag [\tau]', 'fontsize', 20);
     ylabel('n(\tau)', 'fontsize', 20);
     axis tight
     ylim([-1 1])
-    xlim([0 512])
+    xlim([0 200])
     grid on
+    
+    E2 = 97;
+    A2 = 73;
+    D3 = 54;
+    G3 = 41;
+    B3 = 32;
+    E4 = 24;
+    
+    yl = get(gca, 'YLim');
+    line( [E2 E2],  yl, 'Color',[1 0.5 0.5],'LineStyle','--');
+    line( [A2 A2],  yl, 'Color',[1 0.5 0.5],'LineStyle','--');
+    line( [D3 D3],  yl, 'Color',[1 0.5 0.5],'LineStyle','--');
+    line( [G3 G3],  yl, 'Color',[1 0.5 0.5],'LineStyle','--');
+    line( [B3 B3],  yl, 'Color',[1 0.5 0.5],'LineStyle','--');
+    line( [E4 E4],  yl, 'Color',[1 0.5 0.5],'LineStyle','--');
+    
+    text(98, -0.9, 'E_2','FontSize',15);
+    text(74, -0.9, 'A_3','FontSize',15);
+    text(55, -0.9, 'D_3','FontSize',15);
+    text(42, -0.9, 'G_3','FontSize',15);
+    text(33, -0.9, 'B_3','FontSize',15);
+    text(25, -0.9, 'E_4','FontSize',15);
 end
 
 function [b, a] = init_DC_Filter (fs)
@@ -114,7 +139,16 @@ function [out] = thresholding (x, THRESHOLD)
   
 end
 
+function init_frequencies()
+   
+    E2_Hz = 82.41;
+    A2_Hz = 110.00;
+    D3_Hz = 146.83;
+    G3_Hz = 196.00;
+    B3_Hz = 246.94;
+    E4_Hz = 329.63;
 
+end
 
 
 

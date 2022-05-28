@@ -8,16 +8,16 @@ function n = Mcleod_pitch_method(signal)
    
 end
 
-
+%Normalised Square Difference Formula
 function n = NSDF(signal)
 
-    W = length(signal)
+    W = length(signal);
     n = zeros(1 , W/4);
     m = zeros(1 , W);
     
     [sigx, ~] = xcorr(signal, signal);
 
-    r = sigx(W  : end); %ignore negative lag half, start from tau = 0.
+    r = sigx(W  : end); % ignore negative lags.
 
     for tau = 0 : W - 1
         sum = 0;
@@ -25,9 +25,7 @@ function n = NSDF(signal)
             sum = sum + signal(j)^2 + signal(j + tau)^2;
         end
         m(tau + 1) = sum;
-    end
-    
+    end 
     n = 2 * r ./ m;
     n = n(1 : W / 4);
-
 end
