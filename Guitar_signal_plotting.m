@@ -1,5 +1,7 @@
 
 
+
+
 clc
 
 load('Sensor_Data/guitar_data.mat'); % guitar signals  fs = 8kHz
@@ -7,28 +9,31 @@ load('Sensor_Data/test_data.mat');   % pure sin waves  fs = 8kHz
 load('Sensor_Data/test_40k.mat');    % purse sin waves fs = 40kHz
 
 
-fs = guitar.fs;
+%fs = guitar.fs;
+fs = 40e3;
 
 max_value = 4096/2; %peak value of adc signal after dc removed.
 DC_bias = 2212; %adc values are from [0 4096]. Adjust to [-2048 2048]
 
-signal1 = guitar.B.clean;   %guitar test signals
-signal2 = test.B.clean;     %pure tone test signals
-signal3 = test40.y80;
+signal1 = guitar.e.clean;   %guitar test signals
+signal2 = test.E.clean;     %pure tone test signals
+signal3 = test40.y350;
 
-signal = signal2; % use to change between type of signals
+
+signal = signal1; % use to change between type of signals
+signal = resample(double(signal), 5, 1);
 
 
 
 % Test signals are broken into frames of size N and processed. This is to
 % emulate a real time ADC buffer.
-N = 2048 * 2; 
+N = 2048 * 1; 
 numFrames = length(signal) / N;
 frameTime = N * 1/fs;
 ADC_buffer_frame = zeros(1, N);
 
 [graph_signal , graph_nsdf] = init_plot(ADC_buffer_frame, fs);
-[b, a] = init_DC_Filter(fs);
+[b a] = filter_init(fs);
 
 
 for k = 1 : numFrames 
@@ -41,30 +46,33 @@ for k = 1 : numFrames
     %-------------------------------------------------- 
   
 
-     frame_thrsh = thresholding(ADC_buffer_frame, 0.05 * max_value);
-     [n, tau, xy] = Mcleod_pitch_method(frame_thrsh);
+	frame_thrsh = thresholding(ADC_buffer_frame, 0.05 * max_value);
+    frame_filtered = filter(b, a, frame_thrsh);
+	[n, tau] = Mcleod_pitch_method(frame_thrsh);
     
-     pitch = round(fs / tau, 2);
-     
- 
+	pitch = round(fs / tau, 2);
     
+
     %-------------------------------------------------- 
     %
     %
    
-    set(graph_signal, 'yData', ADC_buffer_frame);
-    set(graph_nsdf, 'yData', n);
+    set(graph_signal, 'yData', frame_filtered);
+    h1 = set(graph_nsdf, 'yData', n);
+    h2 = copyobj(h1, graph_nsdf); 
+    set(h2,'XData',xy(1),'YData',xy(2),'Color','r')
     drawnow
     
     
-    leg_str = sprintf('Pitch Estimate: %.2f Hz\n',pitch);
-    legend(leg_str, 'fontsize', 20);
-	fprintf('        %.2f Hz\n',pitch);
     
     
+    if isnan(pitch) == 0
+        leg_str = sprintf('Pitch Estimate: %.2f Hz\n',pitch);
+        legend(leg_str, 'fontsize', 20);
+        fprintf('        %.2f Hz\n',pitch);
+    end
     
-    
-    pause(0.256 * 40)
+    pause(0.256 * 3)
 end
 
 
@@ -98,16 +106,26 @@ function [graph_signal , graph_nsdf] = init_plot (frame, fs)
     ylabel('n(\tau)', 'fontsize', 20);
     axis tight
     ylim([-1 1])
-    xlim([0 200])
+    xlim([0 1000])
     grid on
     
-    E2 = 97;
-    A2 = 73;
-    D3 = 54;
-    G3 = 41;
-    B3 = 32;
-    E4 = 24;
+    E2_Hz = 82.41;
+    A2_Hz = 110.00;
+    D3_Hz = 146.83;
+    G3_Hz = 196.00;
+    B3_Hz = 246.94;
+    E4_Hz = 329.63;
+
+    E2 = round(fs / E2_Hz);
+    A2 = round(fs / A2_Hz);
+    D3 = round(fs / D3_Hz);
+    G3 = round(fs / G3_Hz);
+    B3 = round(fs / B3_Hz);
+    E4 = round(fs / E4_Hz);
+    
+
     light_red = [1 0.5 0.5];
+    
     yl = get(gca, 'YLim');
     line( [E2 E2],  yl, 'Color',light_red,'LineStyle','--');
     line( [A2 A2],  yl, 'Color',light_red,'LineStyle','--');
@@ -116,25 +134,16 @@ function [graph_signal , graph_nsdf] = init_plot (frame, fs)
     line( [B3 B3],  yl, 'Color',light_red,'LineStyle','--');
     line( [E4 E4],  yl, 'Color',light_red,'LineStyle','--');
     
-    text(98, -0.9, 'E_2','FontSize',15);
-    text(74, -0.9, 'A_3','FontSize',15);
-    text(55, -0.9, 'D_3','FontSize',15);
-    text(42, -0.9, 'G_3','FontSize',15);
-    text(33, -0.9, 'B_3','FontSize',15);
-    text(25, -0.9, 'E_4','FontSize',15);
+    text(E2 + 1, -0.9, 'E_2','FontSize',15);
+    text(A2 + 1, -0.9, 'A_3','FontSize',15);
+    text(D3 + 1, -0.9, 'D_3','FontSize',15);
+    text(G3 + 1, -0.9, 'G_3','FontSize',15);
+    text(B3 + 1, -0.9, 'B_3','FontSize',15);
+    text(E4 + 1, -0.9, 'E_4','FontSize',15);
     
    
 end
 
-function [b, a] = init_DC_Filter (fs)
-
-    %DC filter
-    fc = 20;
-    fn = fc / (fs/2);
-    order = 2;
-    [b, a] = butter(order, fn, 'high');
-
-end
 
 function [out] = thresholding (x, THRESHOLD)
 
@@ -143,17 +152,14 @@ function [out] = thresholding (x, THRESHOLD)
   
 end
 
-function init_frequencies()
-   
-    E2_Hz = 82.41;
-    A2_Hz = 110.00;
-    D3_Hz = 146.83;
-    G3_Hz = 196.00;
-    B3_Hz = 246.94;
-    E4_Hz = 329.63;
+function [b a] = filter_init(fs)
+    
+    fc = 350;
+    fn = fc / (fs/2);
+    order = 2;
+    stop_band_ripple_dB = 0.5;
+    [b, a] = butter(order, fn);
 
 end
-
-
 
 

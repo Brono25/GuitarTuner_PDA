@@ -1,12 +1,13 @@
 
 
 % tau is the lag corresponding to the pitch
-function [np, tau_interp, points] = Mcleod_pitch_method(signal)
+function [np, tau_interp] = Mcleod_pitch_method(signal)
 
-    %x = resample(signal, 5, 1);
+    
     n = NSDF(signal);
     np = remove_first_peak(n);
-    [~, tau] = max(np(1:200))
+    np(np < 0.8) = 0;
+    [~, tau] = max(np);
     
     if (tau <= 1)
         tau = 2;
@@ -18,8 +19,8 @@ function [np, tau_interp, points] = Mcleod_pitch_method(signal)
     x3 = tau + 1;
     y3 = np(tau + 1);
     
-    tau_interp = parabolic_interpolation(x1, x2 ,x3, y1, y2, y3);
-    points = [x1 y1 x2 y2 x3 y3];
+    tau_interp = parabolic_interpolation(x1, y1, x2, y2, x3, y3);
+   
 end
 
 %Normalised Square Difference Formula
@@ -54,14 +55,18 @@ function nsdf = remove_first_peak(nsdf)
         end  
         nsdf(i) = 0;
     end
+   
 end
 
 
-function x_max = parabolic_interpolation(x1, x2 ,x3, y1, y2, y3)
+function x_max = parabolic_interpolation(x1, y1, x2, y2, x3, y3)
   
     X = [x1^2 x1 1; x2^2 x2 1; x3^2 x3 1];
     Y = [y1; y2; y3];
     A = inv(X) * Y;
     x_max = -A(2) /  (2 * A(1));
+        
 end
+
+
 
