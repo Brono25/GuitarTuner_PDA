@@ -6,7 +6,7 @@ function [np, tau_interp] = Mcleod_pitch_method(signal)
     
     n = NSDF(signal);
     np = remove_first_peak(n);
-    np(np < 0.8) = 0;
+    np(np < 0.9) = 0;
     [~, tau] = max(np);
     
     if (tau <= 1)
@@ -67,6 +67,5 @@ function x_max = parabolic_interpolation(x1, y1, x2, y2, x3, y3)
     x_max = -A(2) /  (2 * A(1));
         
 end
-
 
 

@@ -15,8 +15,8 @@ fs = 40e3;
 max_value = 4096/2; %peak value of adc signal after dc removed.
 DC_bias = 2212; %adc values are from [0 4096]. Adjust to [-2048 2048]
 
-signal1 = guitar.e.clean;   %guitar test signals
-signal2 = test.E.clean;     %pure tone test signals
+signal1 = guitar.E.clean;   %guitar test signals
+signal2 = test.B.clean;     %pure tone test signals
 signal3 = test40.y350;
 
 
@@ -27,44 +27,65 @@ signal = resample(double(signal), 5, 1);
 
 % Test signals are broken into frames of size N and processed. This is to
 % emulate a real time ADC buffer.
-N = 2048 * 1; 
+N = 1024; 
 numFrames = length(signal) / N;
 frameTime = N * 1/fs;
 ADC_buffer_frame = zeros(1, N);
+frame1 = ADC_buffer_frame;
+frame2 = zeros(1, N);
+frame3 = zeros(1, N);
+frame4 = zeros(1, N);
+process_frame = zeros(1, 4 * N);
 
-[graph_signal , graph_nsdf] = init_plot(ADC_buffer_frame, fs);
-[b a] = filter_init(fs);
-
+[graph_signal , graph_nsdf] = init_plot(process_frame, fs);
+[b1 a1] = filter_init(fs);
+[b2 a2] = init_DC_Filter (fs);
 
 for k = 1 : numFrames 
     
     frameCounter = (k - 1) * N + 1 : N * k;
     ADC_buffer_frame = signal(frameCounter);
     ADC_buffer_frame = double(ADC_buffer_frame) - DC_bias;
+    
+    frame4 = frame3;
+    frame3 = frame2;
+    frame2 = frame1;
+    frame1 = ADC_buffer_frame;
+    
+    
+    
+    
+    process_frame = [frame4 frame3 frame2 frame1];
+  
+    
     %
     %              Process Frame
     %-------------------------------------------------- 
   
 
-	frame_thrsh = thresholding(ADC_buffer_frame, 0.05 * max_value);
-    frame_filtered = filter(b, a, frame_thrsh);
-	[n, tau] = Mcleod_pitch_method(frame_thrsh);
+	frame_thrsh = thresholding(process_frame, 0.25 * max_value);
+   % frame_filtered = filter(b1, a1, frame_thrsh);
+    frame_filtered = filter(b2, a2,  frame_thrsh);
+    
+    
+    %bits = digitizer(process_frame, 0.25 * max_value);
+    
+	[n, tau] = Mcleod_pitch_method(frame_filtered);
     
 	pitch = round(fs / tau, 2);
-    
+
 
     %-------------------------------------------------- 
     %
     %
+    
+    
    
-    set(graph_signal, 'yData', frame_filtered);
-    h1 = set(graph_nsdf, 'yData', n);
-    h2 = copyobj(h1, graph_nsdf); 
-    set(h2,'XData',xy(1),'YData',xy(2),'Color','r')
+    set(graph_signal, 'yData', process_frame);
+    set(graph_nsdf,'YData',n)
     drawnow
     
-    
-    
+  
     
     if isnan(pitch) == 0
         leg_str = sprintf('Pitch Estimate: %.2f Hz\n',pitch);
@@ -72,13 +93,13 @@ for k = 1 : numFrames
         fprintf('        %.2f Hz\n',pitch);
     end
     
-    pause(0.256 * 3)
+    pause(0.128)
 end
 
 
 function [graph_signal , graph_nsdf] = init_plot (frame, fs)
     
-    W =  length(frame);
+    W = length(frame);
     time = linspace(0, W / fs, W);
     lags = linspace(0, W / 4, W / 4);
     
@@ -94,6 +115,7 @@ function [graph_signal , graph_nsdf] = init_plot (frame, fs)
     xlabel('Time [sec]', 'fontsize', 20);
     axis tight
     ylim([-2048 2048])
+  
     grid on
     
     %plotting NSDF
@@ -106,7 +128,7 @@ function [graph_signal , graph_nsdf] = init_plot (frame, fs)
     ylabel('n(\tau)', 'fontsize', 20);
     axis tight
     ylim([-1 1])
-    xlim([0 1000])
+    %xlim([0 1000])
     grid on
     
     E2_Hz = 82.41;
@@ -149,7 +171,6 @@ function [out] = thresholding (x, THRESHOLD)
 
     x(abs(x) < THRESHOLD) = 0; 
     out = x;
-  
 end
 
 function [b a] = filter_init(fs)
@@ -161,5 +182,34 @@ function [b a] = filter_init(fs)
     [b, a] = butter(order, fn);
 
 end
+
+
+function [b, a] = init_DC_Filter (fs)
+
+    %DC filter
+    fc = 20;
+    fn = fc / (fs/2);
+    order = 4;
+    [b, a] = butter(order, fn, 'high');
+
+end
+
+
+
+function bits = digitizer(x, threshold)
+
+    for i = 1 : length(x)
+        if x(i) >=  threshold
+            
+            x(i) = 1;
+        else   
+             x(i) = 0;
+        end    
+    end
+    bits = x;
+end
+
+
+
 
 
