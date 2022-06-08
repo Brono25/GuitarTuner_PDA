@@ -4,49 +4,38 @@
 
 clc
 
-load('Sensor_Data/guitar_data.mat'); % guitar signals  fs = 8kHz
-load('Sensor_Data/test_data.mat');   % pure sin waves  fs = 8kHz
-load('Sensor_Data/test_40k.mat');    % purse sin waves fs = 40kHz
+% Device i/o setup
+fs = 40000;
+N = 2048;
+deviceReader = audioDeviceReader(fs,N, ...
+                                'Device', 'Wireless Stereo Headset'...
+                                , 'OutputDataType', 'int16');   
+setup(deviceReader);
 
 
-%fs = guitar.fs;
-fs = 40e3;
 
 max_value = 4096/2; %peak value of adc signal after dc removed.
 DC_bias = 2212; %adc values are from [0 4096]. Adjust to [-2048 2048]
 
-signal1 = guitar.E.clean;   %guitar test signals
-signal2 = test.E.clean;     %pure tone test signals
-signal3 = test40.y350;
 
-
-signal = signal2; % use to change between type of signals
-signal = resample(double(signal), 5, 1);
-
-
-
-% Test signals are broken into frames of size N and processed. This is to
-% emulate a real time ADC buffer.
-N = 2048 * 1; 
-numFrames = length(signal) / N;
-frameTime = N * 1/fs;
-ADC_buffer_frame = zeros(1, N);
-
-[graph_signal , graph_nsdf] = init_plot(ADC_buffer_frame, fs);
+t = linspace(0,1/fs * N, N);
+frame = zeros(1,N);
+[graph_signal , graph_nsdf] = init_plot(frame, fs);
 [b a] = filter_init(fs);
 
-pitch_table = [0 0 0 0 0];
-for k = 1 : numFrames 
+pitch_table = zeros(1,5);
+
+tic
+disp('You are live...')
+while toc < 30
     
-    frameCounter = (k - 1) * N + 1 : N * k;
-    ADC_buffer_frame = signal(frameCounter);
-    ADC_buffer_frame = double(ADC_buffer_frame) - DC_bias;
+    frame = [deviceReader()];
     %
     %              Process Frame
     %-------------------------------------------------- 
   
 
-	frame_thrsh = thresholding(ADC_buffer_frame, 0.15 * max_value);
+	frame_thrsh = thresholding(1.5 * frame, 0.05 * max_value);
     frame_filtered = filter(b, a, frame_thrsh);
 	[n, tau] = Mcleod_pitch_method(frame_filtered );
     
@@ -79,8 +68,15 @@ for k = 1 : numFrames
         fprintf('        %.2f Hz\n',pitch);
     end
     
-    pause(0.256 * 2)
+    
 end
+
+
+release(deviceReader)
+
+
+
+
 
 
 function [graph_signal , graph_nsdf] = init_plot (frame, fs)

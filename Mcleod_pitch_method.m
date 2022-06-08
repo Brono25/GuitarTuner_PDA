@@ -6,7 +6,7 @@ function [np, tau_interp] = Mcleod_pitch_method(signal)
     
     n = NSDF(signal);
     np = remove_first_peak(n);
-    np(np < 0.9) = 0;
+    np(np < 0.3) = 0;
     [~, tau] = max(np);
     
     if (tau <= 1)
