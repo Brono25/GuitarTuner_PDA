@@ -23,11 +23,12 @@ frame = zeros(1,N);
 [graph_signal , graph_nsdf] = init_plot(frame, fs);
 [b a] = filter_init(fs);
 
-pitch_table = zeros(1,5);
+pitch_table = zeros(1,3);
 
+k = 0.5;
 tic
 disp('You are live...')
-while toc < 30
+while toc < 100
     
     frame = [deviceReader()];
     %
@@ -35,15 +36,19 @@ while toc < 30
     %-------------------------------------------------- 
   
 
-	frame_thrsh = thresholding(1.5 * frame, 0.05 * max_value);
+	frame_thrsh = thresholding(k * frame, 0.05 * max_value);
     frame_filtered = filter(b, a, frame_thrsh);
+    %frame_filtered = frame_thrsh;
 	[n, tau] = Mcleod_pitch_method(frame_filtered );
     
     pitch_estimate = round(fs / tau, 2);
-	if isnan(pitch_estimate) == 0
-        pitch_table = [pitch_table pitch_estimate];
-        pitch_table = pitch_table(2:end);
+    
+    if isnan(pitch_estimate) == 1
+        pitch_estimate = 0;
     end
+    
+	pitch_table = [pitch_table pitch_estimate];
+    pitch_table = pitch_table(2:end);
     
     pitch = median(pitch_table);
     
@@ -61,8 +66,7 @@ while toc < 30
     
     
     
-    
-    if isnan(pitch) == 0 || pitch ~= 0
+    if pitch ~= 0
         leg_str = sprintf('Pitch Estimate: %.2f Hz\n',pitch);
         legend(leg_str, 'fontsize', 20);
         fprintf('        %.2f Hz\n',pitch);
