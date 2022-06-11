@@ -1,7 +1,7 @@
 
 
 % tau is the lag corresponding to the pitch
-function [np, tau_interp] = Mcleod_pitch_method(signal)
+function [np, pitch] = Mcleod_pitch_method(signal)
 
     
     n = NSDF(signal);
@@ -20,6 +20,8 @@ function [np, tau_interp] = Mcleod_pitch_method(signal)
     y3 = np(tau + 1);
     
     tau_interp = parabolic_interpolation(x1, y1, x2, y2, x3, y3);
+    
+    pitch = round(40000 / tau_interp, 2);
    
 end
 
