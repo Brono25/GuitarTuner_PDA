@@ -15,19 +15,19 @@ fs = 40e3;
 max_value = 4096/2; %peak value of adc signal after dc removed.
 DC_bias = 2212; %adc values are from [0 4096]. Adjust to [-2048 2048]
 
-signal1 = guitar.E.clean;   %guitar test signals
-signal2 = test.e.clean;     %pure tone test signals
+signal1 = guitar.e.clean;   %guitar test signals
+signal2 = test.E.clean;     %pure tone test signals
 signal3 = test40.y350;
 
 
-signal = signal2; % use to change between type of signals
+signal = signal1; % use to change between type of signals
 signal = resample(double(signal), 5, 1);
 
 
 
 % Test signals are broken into frames of size N and processed. This is to
 % emulate a real time ADC buffer.
-N = 2048 * 1; 
+N = 2048; 
 numFrames = length(signal) / N;
 frameTime = N * 1/fs;
 ADC_buffer_frame = zeros(1, N);
@@ -48,13 +48,17 @@ for k = 1 : numFrames
 
 	frame_thrsh = thresholding(ADC_buffer_frame, 0.15 * max_value);
     frame_filtered = filter(b, a, frame_thrsh);
-	[n, tau] = Mcleod_pitch_method(frame_filtered );
     
-    pitch_estimate = round(fs / tau, 2);
-	if isnan(pitch_estimate) == 0
+    
+%     tic
+  	[n, pitch_estimate] = Mcleod_pitch_method(frame_filtered );
+%     toc
+    
+   
+	
         pitch_table = [pitch_table pitch_estimate];
         pitch_table = pitch_table(2:end);
-    end
+    
     
     pitch = median(pitch_table);
     
