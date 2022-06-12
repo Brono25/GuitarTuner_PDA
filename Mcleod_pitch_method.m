@@ -1,22 +1,22 @@
 
 
 % tau is the lag corresponding to the pitch
-function [np, pitch] = Mcleod_pitch_method(signal)
+function [n, pitch] = Mcleod_pitch_method(signal)
 
     
     n = NSDF(signal);
-    np = remove_first_peak(n);
-    np(np < 0.3) = 0;
-    [~, tau] = max(np);
-    
-    if (tau <= 1)
-        tau = 2;
+    tau = find_peak(n);
+    if (tau == 0) 
+        pitch = 0;
+        return
     end
     
+
+    
     xp = tau;
-    a = np(tau - 1);
-    b = np(tau);
-    c = np(tau + 1);
+    a = n(tau - 1);
+    b = n(tau);
+    c = n(tau + 1);
     
     tau_interp = parabolic_interpolation(xp, a, b, c);
     
@@ -64,6 +64,32 @@ function nsdf = remove_first_peak(nsdf)
     end
    
 end
+
+function bin = find_peak(vector)
+    
+    flag = 0;
+    peak = 0;
+    bin = 0;
+    for i = 1 : length(vector)
+        
+       if (flag == 0) && (vector(i) < 0)
+           flag = 1;
+       end
+     
+       if (flag == 1)
+           
+           if (vector(i) > peak)
+               
+               peak = vector(i);
+               bin = i;
+           end
+       end
+    end
+
+end
+
+
+
 
 function x_max = parabolic_interpolation(xp, a ,b ,c)
   

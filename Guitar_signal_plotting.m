@@ -15,7 +15,7 @@ fs = 40e3;
 max_value = 4096/2; %peak value of adc signal after dc removed.
 DC_bias = 2212; %adc values are from [0 4096]. Adjust to [-2048 2048]
 
-signal1 = guitar.e.clean;   %guitar test signals
+signal1 = guitar.E.clean;   %guitar test signals
 signal2 = test.E.clean;     %pure tone test signals
 signal3 = test40.y350;
 
