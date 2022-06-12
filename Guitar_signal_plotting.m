@@ -15,8 +15,8 @@ fs = 40e3;
 max_value = 4096/2; %peak value of adc signal after dc removed.
 DC_bias = 2212; %adc values are from [0 4096]. Adjust to [-2048 2048]
 
-signal1 = guitar.E.clean;   %guitar test signals
-signal2 = test.E.clean;     %pure tone test signals
+signal1 = guitar.D.clean;   %guitar test signals
+signal2 = test.A.clean;     %pure tone test signals
 signal3 = test40.y350;
 
 
@@ -32,10 +32,11 @@ numFrames = length(signal) / N;
 frameTime = N * 1/fs;
 ADC_buffer_frame = zeros(1, N);
 
+
 [graph_signal , graph_nsdf] = init_plot(ADC_buffer_frame, fs);
 [b a] = filter_init(fs);
 
-pitch_table = [0 0 0 0 0];
+pitch_table = [0 0 0];
 for k = 1 : numFrames 
     
     frameCounter = (k - 1) * N + 1 : N * k;
@@ -57,6 +58,7 @@ for k = 1 : numFrames
         pitch_table = [pitch_table pitch_estimate];
         pitch_table = pitch_table(2:end);
         pitch = median(pitch_table);
+        %pitch = pitch_estimate;
     end
     
     
@@ -72,9 +74,7 @@ for k = 1 : numFrames
     h2 = copyobj(h1, graph_nsdf); 
     %set(h2,'XData',xy(1),'YData',xy(2),'Color','r')
     drawnow
-    
-    
-    
+ 
     
     if isnan(pitch) == 0 || pitch ~= 0
         leg_str = sprintf('Pitch Estimate: %.2f Hz\n',pitch);

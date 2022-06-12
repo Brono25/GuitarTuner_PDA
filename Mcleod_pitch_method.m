@@ -11,8 +11,6 @@ function [n, pitch] = Mcleod_pitch_method(signal)
         return
     end
     
-
-    
     xp = tau;
     a = n(tau - 1);
     b = n(tau);
@@ -53,39 +51,34 @@ function n = NSDF(signal)
 end
 
 
-% the intial peak at lag 0 is always the maximum.
-% removing this will make finding the second maximum easier.
-function nsdf = remove_first_peak(nsdf)  
-    for i = 1 : length(nsdf)
-        if (nsdf(i) < 0) 
-            return;
-        end  
-        nsdf(i) = 0;
-    end
-   
-end
-
 function bin = find_peak(vector)
     
     flag = 0;
+    valid_peak = 0;
     peak = 0;
     bin = 0;
+    threshold = 0.9;
     for i = 1 : length(vector)
         
        if (flag == 0) && (vector(i) < 0)
-           flag = 1;
+           flag = 1; %wait until first zero crossing before starting
        end
      
+       %then find first major peak which is over threshold
        if (flag == 1)
            
-           if (vector(i) > peak)
+           if (vector(i) > peak) && (vector(i) > threshold)
                
                peak = vector(i);
                bin = i;
-           end
+               valid_peak = 1;
+              
+           elseif (valid_peak == 1)
+               
+               return;
+           end 
        end
     end
-
 end
 
 
