@@ -16,11 +16,11 @@ max_value = 4096/2; %peak value of adc signal after dc removed.
 DC_bias = 2212; %adc values are from [0 4096]. Adjust to [-2048 2048]
 
 signal1 = guitar.e.clean;   %guitar test signals
-signal2 = test.e.clean;     %pure tone test signals
+signal2 = test.E.clean;     %pure tone test signals
 signal3 = test40.y350;
 
 
-signal = signal1; % use to change between type of signals
+signal = signal2; % use to change between type of signals
 signal = resample(double(signal), 5, 1);
 
 
@@ -48,8 +48,10 @@ for k = 1 : numFrames
 
 	frame_thrsh = thresholding(ADC_buffer_frame, 0.15 * max_value);
     frame_filtered = filter(b, a, frame_thrsh);
-	[n, pitch_estimate] = Mcleod_pitch_method(frame_filtered );
     
+    tic
+	[n, pitch_estimate] = Mcleod_pitch_method(frame_filtered );
+    toc
    
 	if isnan(pitch_estimate) == 0
         pitch_table = [pitch_table pitch_estimate];

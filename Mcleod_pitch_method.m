@@ -12,14 +12,14 @@ function [np, pitch] = Mcleod_pitch_method(signal)
     if (tau <= 1)
         tau = 2;
     end
-    x1 = tau - 1;
-    y1 = np(tau - 1);
-    x2 = tau;
-    y2 = np(tau);
-    x3 = tau + 1;
-    y3 = np(tau + 1);
     
-    tau_interp = parabolic_interpolation(x1, y1, x2, y2, x3, y3);
+    xp = tau;
+    a = np(tau - 1);
+    b = np(tau);
+    c = np(tau + 1);
+    
+    tau_interp = parabolic_interpolation(xp, a, b, c);
+    
     
     pitch = round(40000 / tau_interp, 2);
    
@@ -30,13 +30,41 @@ function n = NSDF(signal)
 
     W = length(signal);
     n = zeros(1 , W/4);
+
+    
+    [sigx, ~] = xcorr(signal, signal);
+
+    r = sigx(W  : end); % ignore negative lags.
+   
+    xs = signal.^2;
+    xs1 = sum(xs);
+    xs2 = xs1;
+    
+    
+    for tau = 0 : 800
+
+        xs1 = xs1 - xs(end - tau);
+        xs2 = xs2 - xs(tau + 1);
+        n(tau + 1) = 2 * r(tau + 1) / (xs1 + xs2);
+    end
+    
+   
+    n = n(1 : W / 4);
+end
+
+
+%Normalised Square Difference Formula
+function n = NSDF2(signal)
+
+    W = length(signal);
+    n = zeros(1 , W/4);
     m = zeros(1 , W);
     
     [sigx, ~] = xcorr(signal, signal);
 
     r = sigx(W  : end); % ignore negative lags.
 
-    for tau = 0 : W - 1
+    for tau = 0 : W/2 - 1
         sum = 0;
         for j = 1 : W - tau
             sum = sum + signal(j)^2 + signal(j + tau)^2;
@@ -60,14 +88,17 @@ function nsdf = remove_first_peak(nsdf)
    
 end
 
-
-function x_max = parabolic_interpolation(x1, y1, x2, y2, x3, y3)
+function x_max = parabolic_interpolation(xp, a ,b ,c)
   
-    X = [x1^2 x1 1; x2^2 x2 1; x3^2 x3 1];
-    Y = [y1; y2; y3];
-    A = inv(X) * Y;
-    x_max = -A(2) /  (2 * A(1));
-        
+    a = 20*log10(a);
+    b = 20*log10(b);
+    c = 20*log10(c);
+    
+    p = 1/2 * (a - c) / (1 - 2*b + c);
+    
+  
+    x_max = xp + p;
+ 
 end
 
 
