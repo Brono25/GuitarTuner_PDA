@@ -29,19 +29,19 @@ end
 function n = NSDF(signal)
 
     W = length(signal);
-    n = zeros(1 , W/4);
+    n = zeros(1 ,800);
 
     
     [sigx, ~] = xcorr(signal, signal);
 
-    r = sigx(W  : end); % ignore negative lags.
+    r = sigx(W  : end); % Start in the middle to ignore negative lags.
    
     xs = signal.^2;
     xs1 = sum(xs);
     xs2 = xs1;
     
-    
-    for tau = 0 : 800
+    %fs/50Hz = 800. Bins pas 800 go below 50Hz wich we can ignore
+    for tau = 0 : 800 
 
         xs1 = xs1 - xs(end - tau);
         xs2 = xs2 - xs(tau + 1);
@@ -49,29 +49,6 @@ function n = NSDF(signal)
     end
     
    
-    n = n(1 : W / 4);
-end
-
-
-%Normalised Square Difference Formula
-function n = NSDF2(signal)
-
-    W = length(signal);
-    n = zeros(1 , W/4);
-    m = zeros(1 , W);
-    
-    [sigx, ~] = xcorr(signal, signal);
-
-    r = sigx(W  : end); % ignore negative lags.
-
-    for tau = 0 : W/2 - 1
-        sum = 0;
-        for j = 1 : W - tau
-            sum = sum + signal(j)^2 + signal(j + tau)^2;
-        end
-        m(tau + 1) = sum;
-    end 
-    n = 2 * r ./ m;
     n = n(1 : W / 4);
 end
 
