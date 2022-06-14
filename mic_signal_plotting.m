@@ -1,18 +1,21 @@
 
 
 
+%audiodevreset
 
 clc
 
 % Device i/o setup
+device1 =  'Wireless Stereo Headset';
+device2 = 'Hi-Res Audio';
 fs = 40000;
 N = 2048;
 deviceReader = audioDeviceReader(fs,N, ...
-                                'Device', 'Wireless Stereo Headset'...
+                                'Device', device2 ...
                                 , 'OutputDataType', 'int16');   
 setup(deviceReader);
 
-
+devices = getAudioDevices(deviceReader);
 
 max_value = 4096/2; %peak value of adc signal after dc removed.
 DC_bias = 2212; %adc values are from [0 4096]. Adjust to [-2048 2048]
@@ -23,11 +26,11 @@ frame = zeros(1,N);
 [graph_signal , graph_nsdf] = init_plot(frame, fs);
 [b a] = filter_init(fs);
 
-pitch_table = zeros(1,11);
+pitch_table = zeros(1,3);
 
 tic
 disp('You are live...')
-while toc < 30
+while toc < 100
     
     frame = [deviceReader()];
     %
