@@ -47,18 +47,18 @@ function n = NSDF(signal)
     end
     
    
-    n = n(1 : W / 4);
+    n = n(1 : 800);
 end
 
 
-function bin = find_peak(vector)
+function tau = find_peak(vector)
     
     flag = 0;
     valid_peak = 0;
     peak = 0;
-    bin = 0;
+    tau = 0;
     threshold = 0.9;
-    for i = 1 : length(vector)
+    for i = 1 : 800 - 1
         
        if (flag == 0) && (vector(i) < 0)
            flag = 1; %wait until first zero crossing before starting
@@ -67,14 +67,16 @@ function bin = find_peak(vector)
        %then find first major peak which is over threshold
        if (flag == 1)
            
-           if (vector(i) > peak) && (vector(i) > threshold)
+           if (vector(i) > peak) && (vector(i) > threshold) 
                
                peak = vector(i);
-               bin = i;
+               tau = i;
                valid_peak = 1;
+               
+            
               
            elseif (valid_peak == 1)
-               
+             
                return;
            end 
        end

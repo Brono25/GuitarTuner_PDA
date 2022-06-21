@@ -50,6 +50,7 @@ while toc < 100
     
     pitch = median(pitch_table);
     
+  
 
    
     %-------------------------------------------------- 
@@ -84,9 +85,10 @@ release(deviceReader)
 
 function [graph_signal , graph_nsdf] = init_plot (frame, fs)
     
+    num_lags = 800;
     W =  length(frame);
     time = linspace(0, W / fs, W);
-    lags = linspace(0, W / 4, W / 4);
+    lags = linspace(0, num_lags, num_lags);
     
 
     figure(1)
@@ -105,7 +107,7 @@ function [graph_signal , graph_nsdf] = init_plot (frame, fs)
     %plotting NSDF
     nexttile
     
-    graph_nsdf = plot(lags, zeros(1, W/4));
+    graph_nsdf = plot(lags, zeros(1, num_lags));
     
     title('NSDF Correlation', 'fontsize', 25);
     xlabel('Lag [\tau]', 'fontsize', 20);
