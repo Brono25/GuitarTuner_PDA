@@ -24,11 +24,27 @@ void print_arr(float *arr, int length)
 
 
 
-int main(int argc, char *argv[])
+int main(void)
 {
-	float f = atof(argv[1]);
+	
+	
+	/*float data[BLOCK_SIZE];
+	float t = 0;
+	for (float f = 0; f < 400; f += 50)
+	{
+		
+		float pitch_estimate = 0;
+		mpm_mcleod_pitch_method_f32(&data[0], &pitch_estimate);
+		printf("%f ~ %f\n", f, pitch_estimate);
 
-	float data[BLOCK_SIZE]; 
+	}*/
+
+	
+
+	float pitch_estimate = 0;
+	float data[BLOCK_SIZE];
+	
+	float f = 101;
 	float t = 0;
 	for (int i = 0; i < BLOCK_SIZE; i++)
 	{
@@ -36,13 +52,57 @@ int main(int argc, char *argv[])
 		
 		t += 0.000025;
 	}
+	mpm_mcleod_pitch_method_f32(&data[0], &pitch_estimate);
+	printf("%f ~ %f\n", f, pitch_estimate);
 
-	//float d[5] = {1,2,3,4,5};
-	//------------XCORR TEST--------------------
-	//float *n = malloc(sizeof(float) * BLOCK_SIZE - 1);
-	float pitch_estimate = 0;
-	mpm_mcleod_pitch_method_f32(&data[0], BLOCK_SIZE, &pitch_estimate);
-	printf("%f\n", pitch_estimate);
+	f = 51;
+	t = 0;
+	for (int i = 0; i < BLOCK_SIZE; i++)
+	{
+		data[i] = cos(2*M_PI*f*t);
+		
+		t += 0.000025;
+	}
+	mpm_mcleod_pitch_method_f32(&data[0], &pitch_estimate);
+	printf("%f ~ %f\n", f, pitch_estimate);
+
+
+	f = 100;
+	t = 0;
+	for (int i = 0; i < BLOCK_SIZE; i++)
+	{
+		data[i] = cos(2*M_PI*f*t);
+		
+		t += 0.000025;
+	}
+	mpm_mcleod_pitch_method_f32(&data[0], &pitch_estimate);
+	printf("%f ~ %f\n", f, pitch_estimate);
+
+	f = 330;
+	t = 0;
+	for (int i = 0; i < BLOCK_SIZE; i++)
+	{
+		data[i] = cos(2*M_PI*f*t);
+		
+		t += 0.000025;
+	}
+	mpm_mcleod_pitch_method_f32(&data[0], &pitch_estimate);
+	printf("%f ~ %f\n", f, pitch_estimate);
+
+
+
+	f = 400;
+	t = 0;
+	for (int i = 0; i < BLOCK_SIZE; i++)
+	{
+		data[i] = cos(2*M_PI*f*t);
+		
+		t += 0.000025;
+	}
+	mpm_mcleod_pitch_method_f32(&data[0], &pitch_estimate);
+	printf("%f ~ %f\n", f, pitch_estimate);
+
+
 	//--------------
 
 /*
