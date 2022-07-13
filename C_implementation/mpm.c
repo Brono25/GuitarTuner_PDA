@@ -39,14 +39,13 @@ float sum(float *x, int len)
 }
 
 
-float dot_prod(float *x1, float *x2, int len)
+void arm_dot_prod_f32(float *x1, float *x2, int len, float *result)
 {	
-	float sum = 0;
+	*result = 0;
 	for (int i = 0; i < len; i++)
 	{
-		 sum += x1[i] * x2[i];
+		 *result += x1[i] * x2[i];
 	}
-	return sum;
 }
 
 
@@ -67,9 +66,11 @@ void xcorr(float *signal, float **r, int LEN)
 	float *x1 = &padded [LEN - 1];
 	float *x2 = &padded [2 * LEN - 2];
 
+	float result = 0;
 	for (int i = 0; i < XCORR_LEN; i++)
 	{
-		sigx[i] = dot_prod(x1, x2, LEN);
+		arm_dot_prod_f32(x1, x2, LEN, &result);
+		sigx[i] = result;
 		x2--;
 	}
 	
