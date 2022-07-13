@@ -12,7 +12,25 @@
 
 #define PEAK_THRESHOLD 0.9
 
-float32_t mpm_reserved_memory[2 * BLOCK_SIZE];
+float32_t mpm_reserved_memory[2 * BLOCK_SIZE] = {0};
+
+
+
+void print_arr(float *arr, int length)
+{
+	for (int i = 0; i < length; i++)
+	{
+		printf("%f \n", arr[i]);
+	}
+	printf("end\n");
+}
+
+
+
+
+
+
+
 
 
 
@@ -108,18 +126,24 @@ void mpm_NSDF_f32(float32_t *pSrc, float32_t *pDst)
 	
 	float32_t *xcorr = &pDst[1];
 
+	
+
 	arm_correlate_f32(&pSrc[0], BLOCK_SIZE , NULL, 0, xcorr);
 
-	float32_t *r = &pDst[BLOCK_SIZE];
+
+	float32_t *r = &xcorr[BLOCK_SIZE - 1];
 
 	float32_t *xs = &pDst[0];
 	float32_t *p_xs1 = &xs[0];
 	float32_t *p_xs2 = &xs[BLOCK_SIZE - 1];
 	float32_t xs1, xs2;
 
+
+
 	arm_mult_f32(&pSrc[0], BLOCK_SIZE,  &pSrc[0], BLOCK_SIZE, &xs[0]);
 	mpm_sum_f32(&xs[0], BLOCK_SIZE, &xs1);
 	xs2 = xs1;
+	
 
 	for (int tau = 0; tau < BLOCK_SIZE  ; tau++)
 	{
@@ -134,6 +158,7 @@ void mpm_NSDF_f32(float32_t *pSrc, float32_t *pDst)
 		p_xs1++;
 		p_xs2--;
 	}	
+	
 }
 
 
@@ -157,8 +182,7 @@ void mpm_mcleod_pitch_method_f32(float32_t *pData, float32_t *pitch_estimate)
 	float32_t *p_ncorr = &mpm_reserved_memory[0];
 
 	mpm_NSDF_f32(pData, p_ncorr);
-
-
+	print_arr(p_ncorr, BLOCK_SIZE * 2);
 	uint32_t tau = 1;
    mpm_find_peak_f32(p_ncorr, &tau);
 
@@ -179,7 +203,6 @@ void mpm_mcleod_pitch_method_f32(float32_t *pData, float32_t *pitch_estimate)
 	*pitch_estimate = FS / delta_tau;
 
 }
-
 
 
 

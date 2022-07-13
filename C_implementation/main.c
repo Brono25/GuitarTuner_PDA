@@ -10,20 +10,6 @@
 
 
 
-
-
-
-void print_arr(float *arr, int length)
-{
-	for (int i = 0; i < length; i++)
-	{
-		printf("%f \n", arr[i]);
-	}
-	printf("end\n");
-}
-
-
-
 int main(void)
 {
 	
@@ -55,7 +41,7 @@ int main(void)
 	mpm_mcleod_pitch_method_f32(&data[0], &pitch_estimate);
 	printf("%f ~ %f\n", f, pitch_estimate);
 
-	f = 51;
+/*	f = 51;
 	t = 0;
 	for (int i = 0; i < BLOCK_SIZE; i++)
 	{
@@ -65,8 +51,8 @@ int main(void)
 	}
 	mpm_mcleod_pitch_method_f32(&data[0], &pitch_estimate);
 	printf("%f ~ %f\n", f, pitch_estimate);
-
-
+*/
+/*
 	f = 100;
 	t = 0;
 	for (int i = 0; i < BLOCK_SIZE; i++)
@@ -101,7 +87,7 @@ int main(void)
 	}
 	mpm_mcleod_pitch_method_f32(&data[0], &pitch_estimate);
 	printf("%f ~ %f\n", f, pitch_estimate);
-
+*/
 
 	//--------------
 
