@@ -10,10 +10,10 @@
 main : main.o mpm.o
 	gcc -g -Wall main.o mpm.o -o main
 
-main.o : mpm.c 
+main.o : mpm.c  main.h
 	gcc -Wall -g -c main.c
 
-mpm.o : mpm.c 
+mpm.o : mpm.c main.h
 	gcc -Wall -g -c mpm.c
 
 so : mpm.c 
@@ -25,4 +25,4 @@ debug :
 	lldb ./main 
 
 clean : 
-	rm -f mpm.o mpm.so main.o
+	rm -f mpm.o mpm.so main.o main

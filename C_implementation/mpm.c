@@ -7,39 +7,36 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
+#include "main.h"
+
+
+#define PEAK_THRESHOLD 0.9
 
 
 
-void print_arr(float *arr, int length)
-{
-	for (int i = 0; i < length; i++)
-	{
-		printf("%f \n", arr[i]);
-	}
-	printf("end\n");
-}
 
-void sqaures(float *xs, float *signal, int len)
+
+void arm_mult_f32(float32_t *pSrcA, int srcALEN,  float32_t *pSrcB, int srcBLEN, float32_t *pDst)
 {	
-	for (int i = 0; i < len; i++)
+	for (int i = 0; i < srcALEN; i++)
 	{
-		 xs[i] = signal[i] * signal[i];
+		 pDst[i] = pSrcA[i] * pSrcB[i];
 	}
 }
 
 
-float sum(float *x, int len)
+void mpm_sum_f32(float32_t *pSrc, int scrLen, float32_t *pRes)
 {	
-	float sum = 0;
-	for (int i = 0; i < len; i++)
+	*pRes = 0;
+	for (int i = 0; i < scrLen; i++)
 	{
-		 sum += x[i];
+		 *pRes += *pSrc;
+		 pSrc++;
 	}
-	return sum;
 }
 
 
-void arm_dot_prod_f32(float *x1, float *x2, int len, float *result)
+void arm_dot_prod_f32(float32_t *x1, float32_t *x2, int len, float32_t *result)
 {	
 	*result = 0;
 	for (int i = 0; i < len; i++)
@@ -50,21 +47,20 @@ void arm_dot_prod_f32(float *x1, float *x2, int len, float *result)
 
 
 
-void arm_correlate_f32(float *srcA, int srcALen, float *srcB, int srcBLen, float *r)
+void arm_correlate_f32(float32_t *srcA, int srcALen, float32_t *srcB, int srcBLen, float32_t *r)
 {
-
 	int PAD_LEN = 3 * srcALen - 2;
 	int XCORR_LEN = 2 * srcALen - 1;
 
-	float *padded  = malloc(PAD_LEN * sizeof(float));
+	float32_t *padded  = malloc(PAD_LEN * sizeof(float32_t));
 	
-	memset(padded , 0, PAD_LEN * sizeof(float));
-	memmove(&padded [srcALen - 1], &srcA[0], srcALen * sizeof(float));
+	memset(padded , 0, PAD_LEN * sizeof(float32_t));
+	memmove(&padded [srcALen - 1], &srcA[0], srcALen * sizeof(float32_t));
 
-	float *x1 = &padded [srcALen - 1];
-	float *x2 = &padded [2 * srcALen - 2];
+	float32_t *x1 = &padded [srcALen - 1];
+	float32_t *x2 = &padded [2 * srcALen - 2];
 
-	float result = 0;
+	float32_t result = 0;
 	for (int i = 0; i < XCORR_LEN; i++)
 	{
 		arm_dot_prod_f32(x1, x2, srcALen, &result);
@@ -72,121 +68,113 @@ void arm_correlate_f32(float *srcA, int srcALen, float *srcB, int srcBLen, float
 		{
 			*r = result;
 			r++;
-
-		}
-		
+		}	
 		x2--;
-	}
-	
+	}	
 	free(padded);
 }
 
 
-int find_peak(float *signal, int LEN)
+void mpm_find_peak_f32(float32_t *pSrc, uint32_t srcLen, uint32_t *tau)
 {
 	int flag = 0;
 	int valid_peak_flag = 0;
-	float peak_value = 0;
-	int tau = 0;
-	float threshold = 0.9;
-
-	for (int i = 0; i < LEN - 1; i++)
+	float32_t peak_value = 0;
+	
+	for (int i = 0; i < srcLen - 1; i++)
     {    
-       if (flag == 0 && signal[i] < 0)
+       if (flag == 0 && *pSrc < 0)
        {
            flag = 1;
 
        }
        if (flag == 1)
        {
-
-       		if (signal[i] > peak_value && signal[i] > threshold) 
+       		if (*pSrc > peak_value && *pSrc > PEAK_THRESHOLD) 
        		{
-				peak_value = signal[i];
-              	tau = i;
+				peak_value = *pSrc;
+              	*tau = i;
                 valid_peak_flag = 1;
                 
        		} else if (valid_peak_flag == 1)
        		{
-       			return tau;
+       			return;
        		}        
-       }    
+       }   
+       pSrc++; 
     }
-    return 0;
 }
 
 
-void NSDF(float *signal, float *n, int LEN)
+void mpm_NSDF_f32(float32_t *pSrc, uint32_t srcLen, float32_t *pDst)
 {
 	
-	float *r = NULL;
-	r = malloc(LEN * sizeof(float));
+	float32_t *r = NULL;
+	r = (float32_t *)malloc(srcLen * sizeof(float32_t));
+	
+	arm_correlate_f32(&pSrc[0], srcLen , NULL, 0, r);
 
-	arm_correlate_f32(&signal[0], LEN, NULL, 0, r);
+	float32_t xs[srcLen];
+	float32_t *p_xs1 = &xs[0];
+	float32_t *p_xs2 = &xs[srcLen - 1];
+	float32_t xs1, xs2;
 
-	float xs[LEN];
-	float xs1, xs2;
-
-	sqaures(&xs[0], &signal[0], LEN);
-	xs1 = sum(&xs[0], LEN);
+	arm_mult_f32(&pSrc[0], srcLen,  &pSrc[0], srcLen, &xs[0]);
+	mpm_sum_f32(&xs[0], srcLen, &xs1);
 	xs2 = xs1;
 
-
-	for (int tau = 0; tau < LEN ; tau++)
+	for (int tau = 0; tau < srcLen  ; tau++)
 	{
-		n[tau] = 2 * r[tau] / (xs1 + xs2);
-		xs1 = xs1 - xs[LEN - tau - 1];
-		xs2 = xs2 - xs[tau];
+
+		*pDst = 2 * (*r) / (xs1 + xs2);
+
+		xs1 = xs1 - (*p_xs1);
+		xs2 = xs2 - (*p_xs2);
+
+		pDst++;
+		r++;
+		p_xs1++;
+		p_xs2--;
 	}	
-
-
-
 }
 
 
 
-float parabolic_interpolation(int xp, float a, float b, float c)
+void mpm_parabolic_interpolation_f32(uint32_t x_pos, float32_t a, float32_t b, float32_t c, float32_t *delta_tau)
 {
 	a = 20*log10(a);
    b = 20*log10(b);
    c = 20*log10(c);
 
-   float p = 0.5 * (a - c) / (1 - 2.0*b + c);
+   float32_t delta_pos = 0.5 * (a - c) / (1 - 2.0*b + c);
 
-   return xp + p;
-
+   *delta_tau = x_pos + delta_pos;
 }
 
 
-float mpm (float *signal, int LEN)
+void mpm_mcleod_pitch_method_f32(float32_t *pSrc, uint32_t srcLen, float32_t *pitch_estimate)
 {
 
-	float *n = NULL;
-	n = malloc(sizeof(float[LEN]));
-	if (n == NULL)
-	{
-		return 1;
-	}
+	float32_t *n = NULL;
+	n = malloc(sizeof(float32_t[srcLen]));
 
-	NSDF(signal, n, LEN);
+	mpm_NSDF_f32(pSrc, BLOCK_SIZE , n);
 
-	int tau = find_peak(n, LEN);
-	
+
+	uint32_t tau = 0;
+   mpm_find_peak_f32(pSrc, srcLen, &tau);
 
 
 	int xp = tau;
-	float a = n[tau - 1];
-	float b = n[tau];
-	float c = n[tau + 1];
+	float32_t a = n[tau - 1];
+	float32_t b = n[tau];
+	float32_t c = n[tau + 1];
 
-	float tau_interp = parabolic_interpolation(xp, a, b, c);
-
-
-	float pitch = 40000.0 / tau_interp;
+	float32_t delta_tau = 0;
+	mpm_parabolic_interpolation_f32(xp, a, b, c, &delta_tau);
 
 
-
-	return pitch;
+	*pitch_estimate = FS / delta_tau;
 }
 
 
