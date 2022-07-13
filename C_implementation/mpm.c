@@ -50,32 +50,34 @@ void arm_dot_prod_f32(float *x1, float *x2, int len, float *result)
 
 
 
-void xcorr(float *signal, float **r, int LEN)
+void arm_correlate_f32(float *srcA, int srcALen, float *srcB, int srcBLen, float *r)
 {
 
-	int PAD_LEN = 3 * LEN - 2;
-	int XCORR_LEN = 2 * LEN - 1;
+	int PAD_LEN = 3 * srcALen - 2;
+	int XCORR_LEN = 2 * srcALen - 1;
 
-	float *sigx   = malloc((XCORR_LEN) * sizeof(float));
 	float *padded  = malloc(PAD_LEN * sizeof(float));
 	
-
 	memset(padded , 0, PAD_LEN * sizeof(float));
-	memmove(&padded [LEN - 1], &signal[0], LEN * sizeof(float));
+	memmove(&padded [srcALen - 1], &srcA[0], srcALen * sizeof(float));
 
-	float *x1 = &padded [LEN - 1];
-	float *x2 = &padded [2 * LEN - 2];
+	float *x1 = &padded [srcALen - 1];
+	float *x2 = &padded [2 * srcALen - 2];
 
 	float result = 0;
 	for (int i = 0; i < XCORR_LEN; i++)
 	{
-		arm_dot_prod_f32(x1, x2, LEN, &result);
-		sigx[i] = result;
+		arm_dot_prod_f32(x1, x2, srcALen, &result);
+		if (i >= srcALen - 1)
+		{
+			*r = result;
+			r++;
+
+		}
+		
 		x2--;
 	}
 	
-	*r = &sigx[LEN - 1];
-
 	free(padded);
 }
 
@@ -118,7 +120,9 @@ void NSDF(float *signal, float *n, int LEN)
 {
 	
 	float *r = NULL;
-	xcorr(&signal[0], &r,  LEN);
+	r = malloc(LEN * sizeof(float));
+
+	arm_correlate_f32(&signal[0], LEN, NULL, 0, r);
 
 	float xs[LEN];
 	float xs1, xs2;
@@ -133,8 +137,10 @@ void NSDF(float *signal, float *n, int LEN)
 		n[tau] = 2 * r[tau] / (xs1 + xs2);
 		xs1 = xs1 - xs[LEN - tau - 1];
 		xs2 = xs2 - xs[tau];
-		
 	}	
+
+
+
 }
 
 

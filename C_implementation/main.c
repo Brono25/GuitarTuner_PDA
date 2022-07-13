@@ -15,7 +15,7 @@ void print_arr(float *arr, int length);
 void sqaures(float *xs, float *signal, int len);
 float sum(float *x, int len);
 void arm_dot_prod_f32(float *x1, float *x2, int len, float *result);
-void xcorr(float *signal, float **r,  int LEN);
+void arm_correlate_f32(float *srcA, int srcALen, float *srcB, int srcBLen, float *r);
 int find_peak(float *signal, int LEN);
 void NSDF(float *signal, float *n, int LEN);
 float parabolic_interpolation(int xp, float a, float b, float c);
